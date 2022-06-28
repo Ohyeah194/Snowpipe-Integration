@@ -1,0 +1,57 @@
+//Creating the table / Meta data
+CREATE DATABASE OUR_FIRST_DB;
+
+CREATE TABLE "OUR_FIRST_DB"."PUBLIC"."LOAN_PAYMENT" (
+  "Loan_ID" STRING,
+  "loan_status" STRING,
+  "Principal" STRING,
+  "terms" STRING,
+  "effective_date" STRING,
+  "due_date" STRING,
+  "paid_off_time" STRING,
+  "past_due_days" STRING,
+  "age" STRING,
+  "education" STRING,
+  "Gender" STRING);
+  
+  
+ //Check that table is empy
+ USE DATABASE OUR_FIRST_DB;
+
+ 
+ //Loading the data from S3 bucket
+  
+ COPY INTO LOAN_PAYMENT
+    FROM s3://bucketsnowflakes3/Loan_payments_data.csv
+    file_format = (type = csv 
+                   field_delimiter = ',' 
+                   skip_header=1);
+
+//Validate
+ SELECT * FROM LOAN_PAYMENT;
+ 
+// Create file format object. (right format)
+CREATE OR REPLACE file format csv_fileformat
+    type = csv
+    field_delimiter = ','
+    skip_header = 1
+    null_if = ('NULL','null')
+    empty_field_as_null = TRUE    
+    FIELD_OPTIONALLY_ENCLOSED_BY = '"' 
+ 
+// Database to manage stage objects, fileformats etc.
+
+CREATE OR REPLACE DATABASE MANAGE_DB;
+
+CREATE OR REPLACE SCHEMA external_stages;
+
+create or replace storage integration s3_int
+  TYPE = EXTERNAL_STAGE
+  STORAGE_PROVIDER = S3
+  ENABLED = TRUE 
+  STORAGE_AWS_ROLE_ARN = 'arn:aws:iam::052311935094:role/snowflakeaccessrole1'
+  STORAGE_ALLOWED_LOCATIONS = ('s3://snowflakes3bucket0001/csv/', 's3://snowflakes3bucket0001/json/')
+   COMMENT = 'This an optional' 
+   
+// See storage integration properties to fetch external_id so we can update it in S3
+DESC integration s3_int; 
